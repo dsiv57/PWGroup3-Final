@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrazione - Progetto Flask</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="login-box">
+            <h1>Registrazione</h1>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form method="POST" action="{{ url_for('register') }}">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" required autofocus>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required minlength="8">
+                    
+                    <!-- Requisiti password -->
+                    <div class="password-requirements" style="margin-top: 10px; font-size: 0.9em;">
+                        <div id="req-length" style="color: #95a5a6;">○ Almeno 8 caratteri</div>
+                        <div id="req-uppercase" style="color: #95a5a6;">○ Almeno una maiuscola (A-Z)</div>
+                        <div id="req-lowercase" style="color: #95a5a6;">○ Almeno una minuscola (a-z)</div>
+                        <div id="req-number" style="color: #95a5a6;">○ Almeno un numero (0-9)</div>
+                        <div id="req-special" style="color: #95a5a6;">○ Almeno un carattere speciale (!@#$%^&*)</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirm_password">Conferma Password:</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required minlength="6">
+                </div>
+                
+                <!-- CHECKBOX GDPR OBBLIGATORIE -->
+                <div class="gdpr-section" style="margin: 25px 0; padding: 20px; background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 8px;">
+                    <h3 style="margin-top: 0; color: var(--primary, #f59e0b); font-size: 16px;">📋 Accettazione Obbligatoria</h3>
+                    
+                    <div class="checkbox-group" style="margin: 15px 0;">
+                        <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; color: var(--text, #e0e0e0);">
+                            <input type="checkbox" name="accept_privacy" id="accept_privacy" required 
+                                   style="margin-top: 3px; cursor: pointer; accent-color: var(--primary, #f59e0b);">
+                            <span style="flex: 1;">
+                                Ho letto e accetto l'<a href="{{ url_for('privacy_policy') }}" target="_blank" 
+                                style="color: var(--primary, #f59e0b); text-decoration: underline;">Informativa Privacy</a> 
+                                e autorizzo il trattamento dei miei dati personali ai sensi del GDPR (Regolamento UE 2016/679).
+                                <span style="color: #dc2626; font-weight: bold;">*</span>
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-group" style="margin: 15px 0;">
+                        <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; color: var(--text, #e0e0e0);">
+                            <input type="checkbox" name="accept_terms" id="accept_terms" required 
+                                   style="margin-top: 3px; cursor: pointer; accent-color: var(--primary, #f59e0b);">
+                            <span style="flex: 1;">
+                                Dichiaro di aver letto e accettato i <a href="{{ url_for('terms_conditions') }}" target="_blank" 
+                                style="color: var(--primary, #f59e0b); text-decoration: underline;">Termini e Condizioni d'Uso</a> 
+                                della piattaforma E-SHOP.
+                                <span style="color: #dc2626; font-weight: bold;">*</span>
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-group" style="margin: 15px 0;">
+                        <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; color: var(--text, #e0e0e0);">
+                            <input type="checkbox" name="confirm_age" id="confirm_age" required 
+                                   style="margin-top: 3px; cursor: pointer; accent-color: var(--primary, #f59e0b);">
+                            <span style="flex: 1;">
+                                Dichiaro di avere almeno <strong>18 anni</strong> e di essere maggiorenne secondo le leggi del mio Paese.
+                                <span style="color: #dc2626; font-weight: bold;">*</span>
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <p style="margin: 15px 0 0 0; font-size: 12px; color: var(--text-secondary, #b0b0b0);">
+                        <span style="color: #dc2626; font-weight: bold;">*</span> Campi obbligatori per completare la registrazione
+                    </p>
+                </div>
+                
+                <button type="submit" class="btn-login">Registrati</button>
+            </form>
+            
+            <div class="info-box">
+                <p>Hai già un account? <a href="{{ url_for('login') }}">Accedi qui</a></p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const passwordInput = document.getElementById('password');
+        const reqLength = document.getElementById('req-length');
+        const reqUppercase = document.getElementById('req-uppercase');
+        const reqLowercase = document.getElementById('req-lowercase');
+        const reqNumber = document.getElementById('req-number');
+        const reqSpecial = document.getElementById('req-special');
+        
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            
+            // Requisiti password
+            updateReq(reqLength, password.length >= 8);
+            updateReq(reqUppercase, /[A-Z]/.test(password));
+            updateReq(reqLowercase, /[a-z]/.test(password));
+            updateReq(reqNumber, /[0-9]/.test(password));
+            updateReq(reqSpecial, /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password));
+        });
+        
+        function updateReq(element, isValid) {
+            if (isValid) {
+                element.style.color = '#27ae60';
+                element.textContent = '✓' + element.textContent.substring(1);
+            } else {
+                element.style.color = '#95a5a6';
+                element.textContent = '○' + element.textContent.substring(1);
+            }
+        }
+    </script>
+</body>
+</html>

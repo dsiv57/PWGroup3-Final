@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Logs - E-SHOP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='pages.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+</head>
+<body>
+    <div class="logs-container">
+        <!-- HEADER CON BOTTONE BACK -->
+        <div class="logs-header">
+            <h1>🛡️ Security Logs Dashboard</h1>
+            <a href="{{ url_for('home') }}" class="btn-back">
+                <i class="fa-solid fa-arrow-left"></i>
+                Torna alla Home
+            </a>
+        </div>
+        
+        <!-- LEGENDA TIPI DI LOG -->
+        <div class="legend-section">
+            <div class="legend-card">
+                <div class="legend-header" onclick="toggleLegend()">
+                    <h3>
+                        <i class="fa-solid fa-book"></i>
+                        Legenda Tipi di Log
+                        <span style="font-size: 12px; font-weight: 400; color: var(--text-secondary, #b0b0b0); margin-left: 8px;">
+                            (Click per espandere/comprimere)
+                        </span>
+                    </h3>
+                    <i class="fa-solid fa-chevron-down legend-toggle" id="legendToggle"></i>
+                </div>
+                
+                <div class="legend-content" id="legendContent">
+                    <div class="legend-body">
+                        <!-- Autenticazione -->
+                        <div class="legend-category">
+                            <div class="legend-category-title">🔐 Autenticazione</div>
+                            <div class="legend-items">
+                                <a href="?type=LOGIN_SUCCESS" class="legend-item success">
+                                    <i class="fa-solid fa-circle-check legend-icon"></i>
+                                    <div class="legend-info">
+                                        <div class="legend-name">LOGIN_SUCCESS</div>
+                                        <div class="legend-desc">Login effettuato con successo</div>
+                                    </div>
+                                    <span class="legend-count">{{ log_type_counts.get('LOGIN_SUCCESS', 0) }}</span>
+                                </a>
+                                
+                                <a href="?type=LOGIN_FAILED" class="legend-item error">
+                                    <i class="fa-solid fa-circle-xmark legend-icon"></i>
+                                    <div class="legend-info">
+                                        <div class="legend-name">LOGIN_FAILED</div>
+                                        <div class="legend-desc">Tentativo di login fallito</div>
+                                    </div>
+                                    <span class="legend-count">{{ log_type_counts.get('LOGIN_FAILED', 0) }}</span>
+                                </a>
+                                
+                                <a href="?type=LOGOUT" class="legend-item info">
+                                    <i class="fa-solid fa-right-from-bracket legend-icon"></i>
+                                    <div class="legend-info">
+                                        <div class="legend-name">LOGOUT</div>
+                                        <div class="legend-desc">Logout effettuato</div>
+                                    </div>
+                                    <span class="legend-count">{{ log_type_counts.get('LOGOUT', 0) }}</span>
+                                </a>
+                                
+                                <a href="?type=REGISTER_SUCCESS" class="legend-item success">
+                                    <i class="fa-solid fa-user-plus legend-icon"></i>
+                                    <div class="legend-info">
+                                        <div class="legend-name">REGISTER_SUCCESS</div>
+                                        <div class="legend-desc">Registrazione completata</div>
+                                    </div>
+                                    <span class="legend-count">{{ log_type_counts.get('REGISTER_SUCCESS', 0) }}</span>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Gestione Account -->
+                        <div class="legend-category">
+                            <div class="legend-category-title">👤 Gestione Account</div>
+                            <div class="legend-items">
+                                <a href="?type=PASSWORD_CHANGE_SUCCESS" class="legend-item success">
+                                    <i class="fa-solid fa-key legend-icon"></i>
+                                    <div class="legend-info">
+                                        <div class="legend-name">PASSWORD_CHANGE_SUCCESS</div>
+                                        <div class="legend-desc">Password modificata con successo</div>
+                                    </div>
+                                    <span class="legend-count">{{ log_type_counts.get('PASSWORD_CHANGE_SUCCESS', 0) }}</span>
+                                </a>
+                                
+                                <a href="?type=PASSWORD_CHANGE_FAILED" class="legend-item error">
+                                    <i class="fa-solid fa-lock legend-icon"></i>
+                                    <div class="legend-info">
+                                        <div class="legend-name">PASSWORD_CHANGE_FAILED</div>
+                                        <div class="legend-desc">Tentativo di cambio password fallito</div>
+                                    </div>
+                                    <span class="legend-count">{{ log_type_counts.get('PASSWORD_CHANGE_FAILED', 0) }}</span>
+                                </a>
+                                
+                                <a href="?type=ACCOUNT_DELETED" class="legend-item warning">
+                                    <i class="fa-solid fa-user-xmark legend-icon"></i>
+                                    <div class="legend-info">
+                                        <div class="legend-name">ACCOUNT_DELETED</div>
+                                        <div class="legend-desc">Account eliminato dall'utente</div>
+                                    </div>
+                                    <span class="legend-count">{{ log_type_counts.get('ACCOUNT_DELETED', 0) }}</span>
+                                </a>
+                                
+                                <a href="?type=ACCOUNT_DELETE_FAILED" class="legend-item error">
+                                    <i class="fa-solid fa-ban legend-icon"></i>
+                                    <div class="legend-info">
+                                        <div class="legend-name">ACCOUNT_DELETE_FAILED</div>
+                                        <div class="legend-desc">Tentativo fallito di eliminazione account</div>
+                                    </div>
+                                    <span class="legend-count">{{ log_type_counts.get('ACCOUNT_DELETE_FAILED', 0) }}</span>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Accesso Pagine -->
+                        <div class="legend-category">
+                            <div class="legend-category-title">📄 Accesso Pagine</div>
+                            <div class="legend-items">
+                                <a href="?type=PAGE_ACCESS" class="legend-item info">
+                                    <i class="fa-solid fa-house legend-icon"></i>
+                                    <div class="legend-info">
+                                        <div class="legend-name">PAGE_ACCESS</div>
+                                        <div class="legend-desc">Accesso alla home page</div>
+                                    </div>
+                                    <span class="legend-count">{{ log_type_counts.get('PAGE_ACCESS', 0) }}</span>
+                                </a>
+                                
+                                <a href="?type=PAGE_ACCESS_LOGS" class="legend-item info">
+                                    <i class="fa-solid fa-shield-halved legend-icon"></i>
+                                    <div class="legend-info">
+                                        <div class="legend-name">PAGE_ACCESS_LOGS</div>
+                                        <div class="legend-desc">Accesso alla dashboard log (admin)</div>
+                                    </div>
+                                    <span class="legend-count">{{ log_type_counts.get('PAGE_ACCESS_LOGS', 0) }}</span>
+                                </a>
+                                
+                                <a href="?type=CONTACT_FORM_SUCCESS" class="legend-item success">
+                                    <i class="fa-solid fa-envelope legend-icon"></i>
+                                    <div class="legend-info">
+                                        <div class="legend-name">CONTACT_FORM_SUCCESS</div>
+                                        <div class="legend-desc">Messaggio di contatto inviato</div>
+                                    </div>
+                                    <span class="legend-count">{{ log_type_counts.get('CONTACT_FORM_SUCCESS', 0) }}</span>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Attacchi di Sicurezza -->
+                        <div class="legend-category">
+                            <div class="legend-category-title">🚨 Attacchi di Sicurezza Rilevati</div>
+                            <div class="legend-items">
+                                <a href="?type=MALICIOUS_INPUT_SQL_INJECTION" class="legend-item danger">
+                                    <i class="fa-solid fa-database legend-icon"></i>
+                                    <div class="legend-info">
+                                        <div class="legend-name">MALICIOUS_INPUT_SQL_INJECTION</div>
+                                        <div class="legend-desc">Tentativo di SQL Injection bloccato</div>
+                                    </div>
+                                    <span class="legend-count">{{ log_type_counts.get('MALICIOUS_INPUT_SQL_INJECTION', 0) }}</span>
+                                </a>
+                                
+                                <a href="?type=MALICIOUS_INPUT_XSS" class="legend-item danger">
+                                    <i class="fa-solid fa-code legend-icon"></i>
+                                    <div class="legend-info">
+                                        <div class="legend-name">MALICIOUS_INPUT_XSS</div>
+                                        <div class="legend-desc">Tentativo di Cross-Site Scripting bloccato</div>
+                                    </div>
+                                    <span class="legend-count">{{ log_type_counts.get('MALICIOUS_INPUT_XSS', 0) }}</span>
+                                </a>
+                                
+                                <a href="?type=MALICIOUS_INPUT_COMMAND_INJECTION" class="legend-item danger">
+                                    <i class="fa-solid fa-terminal legend-icon"></i>
+                                    <div class="legend-info">
+                                        <div class="legend-name">MALICIOUS_INPUT_COMMAND_INJECTION</div>
+                                        <div class="legend-desc">Tentativo di Command Injection bloccato</div>
+                                    </div>
+                                    <span class="legend-count">{{ log_type_counts.get('MALICIOUS_INPUT_COMMAND_INJECTION', 0) }}</span>
+                                </a>
+                                
+                                <a href="?type=MALICIOUS_INPUT_PATH_TRAVERSAL" class="legend-item danger">
+                                    <i class="fa-solid fa-folder-tree legend-icon"></i>
+                                    <div class="legend-info">
+                                        <div class="legend-name">MALICIOUS_INPUT_PATH_TRAVERSAL</div>
+                                        <div class="legend-desc">Tentativo di Path Traversal bloccato</div>
+                                    </div>
+                                    <span class="legend-count">{{ log_type_counts.get('MALICIOUS_INPUT_PATH_TRAVERSAL', 0) }}</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- FILTRI -->
+        <div class="filters-container">
+            <div class="filters-header">
+                <h3>🔍 Filtri Log</h3>
+                <span style="color: var(--text-secondary, #b0b0b0); font-size: 13px;">
+                    Mostrando {{ stats.total }} risultati
+                </span>
+            </div>
+            
+            <form method="GET" action="{{ url_for('logs') }}" id="filterForm">
+                <div class="filter-grid">
+                    <div class="filter-item">
+                        <label for="type">Tipo Evento</label>
+                        <select name="type" id="type">
+                            <option value="">Tutti i tipi</option>
+                            {% for log_type in log_types %}
+                            <option value="{{ log_type }}" {% if filters.type == log_type %}selected{% endif %}>
+                                {{ log_type }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="filter-item">
+                        <label for="ip">Indirizzo IP</label>
+                        <input type="text" 
+                               name="ip" 
+                               id="ip" 
+                               placeholder="es: 192.168.1.100" 
+                               value="{{ filters.ip }}">
+                    </div>
+                    
+                    <div class="filter-item">
+                        <label for="user">Username</label>
+                        <input type="text" 
+                               name="user" 
+                               id="user" 
+                               placeholder="es: admin" 
+                               value="{{ filters.user }}">
+                    </div>
+                    
+                    <div class="filter-item">
+                        <label for="error">Solo Errori</label>
+                        <select name="error" id="error">
+                            <option value="">Tutti</option>
+                            <option value="true" {% if filters.error == 'true' %}selected{% endif %}>
+                                Solo Errori
+                            </option>
+                            <option value="false" {% if filters.error == 'false' %}selected{% endif %}>
+                                Solo Successi
+                            </option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-item">
+                        <label for="date">Data</label>
+                        <input type="date" 
+                               name="date" 
+                               id="date" 
+                               value="{{ filters.date }}">
+                    </div>
+                </div>
+                
+                <div class="filter-actions">
+                    <button type="submit" class="btn-filter apply">🔍 Applica Filtri</button>
+                    <a href="{{ url_for('logs') }}" class="btn-filter reset">🔄 Reset</a>
+                </div>
+            </form>
+            
+            <!-- Quick Filters -->
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e0e0e0;">
+                <strong style="font-size: 13px; color: #666; display: block; margin-bottom: 8px;">⚡ Filtri Rapidi:</strong>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <a href="?error=true" class="filter-tag" style="text-decoration: none; cursor: pointer;">
+                        🔴 Solo Errori
+                    </a>
+                    <a href="?type=LOGIN_FAILED" class="filter-tag" style="text-decoration: none;">
+                        🚫 Login Falliti
+                    </a>
+                    <a href="?type=MALICIOUS_INPUT" class="filter-tag" style="text-decoration: none;">
+                        🛡️ Attacchi
+                    </a>
+                    <a href="?type=LOGIN_SUCCESS" class="filter-tag" style="text-decoration: none;">
+                        ✅ Login Riusciti
+                    </a>
+                    <a href="?type=PAGE_ACCESS" class="filter-tag" style="text-decoration: none;">
+                        📄 Accessi Pagine
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Filtri attivi -->
+            {% if filters.type or filters.ip or filters.user or filters.error or filters.date %}
+            <div class="active-filters">
+                <strong style="font-size: 13px; color: #666; margin-right: 10px;">Filtri attivi:</strong>
+                {% if filters.type %}
+                <span class="filter-tag">Tipo: {{ filters.type }}</span>
+                {% endif %}
+                {% if filters.ip %}
+                <span class="filter-tag">IP: {{ filters.ip }}</span>
+                {% endif %}
+                {% if filters.user %}
+                <span class="filter-tag">User: {{ filters.user }}</span>
+                {% endif %}
+                {% if filters.error == 'true' %}
+                <span class="filter-tag">Solo Errori</span>
+                {% elif filters.error == 'false' %}
+                <span class="filter-tag">Solo Successi</span>
+                {% endif %}
+                {% if filters.date %}
+                <span class="filter-tag">Data: {{ filters.date }}</span>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- SEZIONE ALERT -->
+        <div class="alerts-section">
+            {% if alerts.total_alerts > 0 %}
+                <!-- Alert Brute Force -->
+                {% if alerts.brute_force %}
+                <div class="alert-box critical">
+                    <div class="alert-header">
+                        <h3>🚨 Brute Force Rilevato</h3>
+                        <span class="alert-badge critical">CRITICAL</span>
+                    </div>
+                    {% for alert in alerts.brute_force %}
+                    <div class="alert-item">
+                        <div class="message">{{ alert.message }}</div>
+                        <div class="details">
+                            IP: <span class="ip-highlight">{{ alert.ip }}</span> | 
+                            Tentativi: <strong>{{ alert.attempts }}</strong> | 
+                            Finestra: {{ alert.time_window }} | 
+                            Ultimo tentativo: {{ alert.last_attempt.strftime('%d/%m/%Y %H:%M:%S') }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <!-- Alert IP Sospetti -->
+                {% if alerts.suspicious_ips %}
+                <div class="alert-box warning">
+                    <div class="alert-header">
+                        <h3>⚠️ IP Sospetti</h3>
+                        <span class="alert-badge warning">WARNING</span>
+                    </div>
+                    {% for alert in alerts.suspicious_ips %}
+                    <div class="alert-item">
+                        <div class="message">{{ alert.message }}</div>
+                        <div class="details">
+                            IP: <span class="ip-highlight">{{ alert.ip }}</span> | 
+                            Errori: <strong>{{ alert.error_count }}</strong> | 
+                            Finestra: {{ alert.time_window }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <!-- Alert Attacchi Input Malevoli -->
+                {% if alerts.malicious_inputs and (
+                    alerts.malicious_inputs.sql_injection.count > 0 or 
+                    alerts.malicious_inputs.xss.count > 0 or 
+                    alerts.malicious_inputs.command_injection.count > 0 or 
+                    alerts.malicious_inputs.path_traversal.count > 0
+                ) %}
+                <div class="alert-box critical">
+                    <div class="alert-header">
+                        <h3>🛡️ Attacchi Rilevati (Ultime 24 ore)</h3>
+                        <span class="alert-badge critical">SECURITY</span>
+                    </div>
+                    
+                    <!-- SQL Injection -->
+                    {% if alerts.malicious_inputs.sql_injection.count > 0 %}
+                    <div class="alert-item">
+                        <div class="message">
+                            <strong>SQL Injection:</strong> {{ alerts.malicious_inputs.sql_injection.count }} tentativi rilevati
+                        </div>
+                        <div class="details">
+                            {% if alerts.malicious_inputs.sql_injection.ips %}
+                            IP più attivi: 
+                            {% for ip_data in alerts.malicious_inputs.sql_injection.ips[:3] %}
+                                <span class="ip-highlight">{{ ip_data.ip }}</span> ({{ ip_data.attempts }}x)
+                                {% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- XSS -->
+                    {% if alerts.malicious_inputs.xss.count > 0 %}
+                    <div class="alert-item">
+                        <div class="message">
+                            <strong>XSS (Cross-Site Scripting):</strong> {{ alerts.malicious_inputs.xss.count }} tentativi rilevati
+                        </div>
+                        <div class="details">
+                            {% if alerts.malicious_inputs.xss.ips %}
+                            IP più attivi: 
+                            {% for ip_data in alerts.malicious_inputs.xss.ips[:3] %}
+                                <span class="ip-highlight">{{ ip_data.ip }}</span> ({{ ip_data.attempts }}x)
+                                {% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Command Injection -->
+                    {% if alerts.malicious_inputs.command_injection.count > 0 %}
+                    <div class="alert-item">
+                        <div class="message">
+                            <strong>Command Injection:</strong> {{ alerts.malicious_inputs.command_injection.count }} tentativi rilevati
+                        </div>
+                        <div class="details">
+                            {% if alerts.malicious_inputs.command_injection.ips %}
+                            IP più attivi: 
+                            {% for ip_data in alerts.malicious_inputs.command_injection.ips[:3] %}
+                                <span class="ip-highlight">{{ ip_data.ip }}</span> ({{ ip_data.attempts }}x)
+                                {% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Path Traversal -->
+                    {% if alerts.malicious_inputs.path_traversal.count > 0 %}
+                    <div class="alert-item">
+                        <div class="message">
+                            <strong>Path Traversal:</strong> {{ alerts.malicious_inputs.path_traversal.count }} tentativi rilevati
+                        </div>
+                        <div class="details">
+                            {% if alerts.malicious_inputs.path_traversal.ips %}
+                            IP più attivi: 
+                            {% for ip_data in alerts.malicious_inputs.path_traversal.ips[:3] %}
+                                <span class="ip-highlight">{{ ip_data.ip }}</span> ({{ ip_data.attempts }}x)
+                                {% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="no-alerts">
+                    ✅ Nessun alert di sicurezza rilevato - Sistema sicuro
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Totale Eventi</h3>
+                <div class="number">{{ stats.total }}</div>
+            </div>
+            
+            <div class="stat-card success">
+                <h3>Login Riusciti</h3>
+                <div class="number">{{ stats.login_success }}</div>
+            </div>
+            
+            <div class="stat-card error">
+                <h3>Login Falliti</h3>
+                <div class="number">{{ stats.login_failed }}</div>
+            </div>
+            
+            <div class="stat-card error">
+                <h3>Errori Totali</h3>
+                <div class="number">{{ stats.errors }}</div>
+            </div>
+        </div>
+        
+        <!-- SEZIONE GRAFICI -->
+        <div class="charts-section">
+            <div class="charts-grid">
+                <!-- Grafico: Distribuzione Tipi di Log -->
+                <div class="chart-card">
+                    <h3><i class="fa-solid fa-chart-pie"></i> Distribuzione Tipi di Log</h3>
+                    <div class="chart-container">
+                        <canvas id="logTypesChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Grafico: Top IP Attivi -->
+                <div class="chart-card">
+                    <h3><i class="fa-solid fa-network-wired"></i> Top 10 IP più Attivi</h3>
+                    <div class="chart-container">
+                        <canvas id="topIPsChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Grafico: Attività per Ora -->
+                <div class="chart-card">
+                    <h3><i class="fa-solid fa-clock"></i> Attività per Ora del Giorno</h3>
+                    <div class="chart-container">
+                        <canvas id="activityByHourChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="logs-table-container">
+            <div class="logs-header">
+                <h2>Ultimi 100 Eventi</h2>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Timestamp</th>
+                        <th>Tipo Evento</th>
+                        <th>IP Address</th>
+                        <th>Utente</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if logs %}
+                        {% for log in logs %}
+                        <tr>
+                            <td>#{{ log.id }}</td>
+                            <td class="timestamp">{{ log.timestamp.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+                            <td>
+                                <span class="log-type {% if log.is_error %}error{% elif 'SUCCESS' in log.type or 'LOGOUT' in log.type %}success{% else %}info{% endif %}">
+                                    {{ log.type }}
+                                </span>
+                            </td>
+                            <td class="ip-address">{{ log.ip }}</td>
+                            <td class="username">
+                                {% if log.user %}
+                                    {{ log.user.username }}
+                                {% else %}
+                                    <em style="color: #999;">N/A</em>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 40px; color: #999;">
+                                Nessun log presente
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        // Configurazione globale Chart.js
+        Chart.defaults.color = '#e0e0e0';
+        Chart.defaults.borderColor = '#333';
+        Chart.defaults.backgroundColor = 'rgba(245, 158, 11, 0.2)';
+        
+        // Prepara i log (già serializzati in JSON)
+        const logs = {{ logs_json | tojson | safe }};
+        
+        // Grafico: Distribuzione Tipi di Log (Pie Chart)
+        const logTypeCount = {};
+        logs.forEach(log => {
+            logTypeCount[log.type] = (logTypeCount[log.type] || 0) + 1;
+        });
+        
+        const sortedTypes = Object.entries(logTypeCount)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 8);
+        
+        new Chart(document.getElementById('logTypesChart'), {
+            type: 'doughnut',
+            data: {
+                labels: sortedTypes.map(t => t[0]),
+                datasets: [{
+                    data: sortedTypes.map(t => t[1]),
+                    backgroundColor: [
+                        '#f59e0b', 
+                        '#3b82f6',
+                        '#10b981',
+                        '#ef4444',
+                        '#8b5cf6',
+                        '#ec4899',
+                        '#14b8a6',
+                        '#f97316'
+                    ],
+                    borderColor: '#1e1e1e',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { color: '#e0e0e0', padding: 12, font: { size: 11 } }
+                    },
+                    tooltip: {
+                        backgroundColor: '#1e1e1e',
+                        titleColor: '#f59e0b',
+                        bodyColor: '#e0e0e0',
+                        borderColor: '#333',
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: true
+                    }
+                }
+            }
+        });
+        
+        // Grafico: Top 10 IP più Attivi (Horizontal Bar)
+        const ipCount = {};
+        logs.forEach(log => {
+            ipCount[log.ip] = (ipCount[log.ip] || 0) + 1;
+        });
+        
+        const topIPs = Object.entries(ipCount)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10);
+        
+        new Chart(document.getElementById('topIPsChart'), {
+            type: 'bar',
+            data: {
+                labels: topIPs.map(ip => ip[0]),
+                datasets: [{
+                    label: 'Richieste',
+                    data: topIPs.map(ip => ip[1]),
+                    backgroundColor: '#f59e0b',
+                    borderColor: '#d97706',
+                    borderWidth: 2,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: { color: '#333' },
+                        ticks: { color: '#e0e0e0', precision: 0 }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { color: '#e0e0e0', font: { size: 10 } }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e1e1e',
+                        titleColor: '#f59e0b',
+                        bodyColor: '#e0e0e0',
+                        borderColor: '#333',
+                        borderWidth: 1,
+                        padding: 12
+                    }
+                }
+            }
+        });
+        
+        // Grafico: Attività per Ora del Giorno (Line Chart)
+        const hourCount = Array(24).fill(0);
+        logs.forEach(log => {
+            const hour = new Date(log.timestamp).getHours();
+            hourCount[hour]++;
+        });
+        
+        new Chart(document.getElementById('activityByHourChart'), {
+            type: 'line',
+            data: {
+                labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                datasets: [{
+                    label: 'Eventi per Ora',
+                    data: hourCount,
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#f59e0b',
+                    pointBorderColor: '#1e1e1e',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#333' },
+                        ticks: { color: '#e0e0e0', precision: 0 }
+                    },
+                    x: {
+                        grid: { color: 'rgba(51, 51, 51, 0.3)' },
+                        ticks: { color: '#e0e0e0', maxRotation: 45, minRotation: 0 }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e1e1e',
+                        titleColor: '#f59e0b',
+                        bodyColor: '#e0e0e0',
+                        borderColor: '#333',
+                        borderWidth: 1,
+                        padding: 12
+                    }
+                }
+            }
+        });
+        
+        // Toggle legenda
+        function toggleLegend() {
+            const content = document.getElementById('legendContent');
+            const toggle = document.getElementById('legendToggle');
+            
+            content.classList.toggle('open');
+            toggle.classList.toggle('open');
+        }
+    </script>
+</body>
+</html>

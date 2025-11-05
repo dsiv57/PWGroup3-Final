@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Account - E-SHOP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='pages.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <div class="account-container">
+        <div class="account-header">
+            <h1>⚙️ Gestione Account</h1>
+            <a href="{{ url_for('home') }}" class="btn-back">
+                <i class="fa-solid fa-arrow-left"></i>
+                Torna alla Home
+            </a>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Informazioni Utente -->
+        <div class="account-section">
+            <h2>👤 Informazioni Account</h2>
+            <div class="user-info">
+                <div class="user-info-item">
+                    <strong>Username</strong>
+                    <span>{{ current_user.username }}</span>
+                </div>
+                <div class="user-info-item">
+                    <strong>Tipo Account</strong>
+                    <span>
+                        {% if current_user.is_admin %}
+                            🔑 Amministratore
+                        {% else %}
+                            👤 Utente Standard
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="user-info-item">
+                    <strong>Account Creato</strong>
+                    <span>{{ current_user.created_at.strftime('%d/%m/%Y') }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Cambio Password -->
+        <div class="account-section">
+            <h2>🔑 Cambia Password</h2>
+            <form method="POST" action="{{ url_for('change_password') }}">
+                <div class="form-group">
+                    <label for="current_password">Password Attuale</label>
+                    <input type="password" id="current_password" name="current_password" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="new_password">Nuova Password</label>
+                    <input type="password" id="new_password" name="new_password" required minlength="8">
+                    
+                    <!-- Requisiti password -->
+                    <div class="password-requirements" style="margin-top: 10px; font-size: 0.9em;">
+                        <div id="req-length" style="color: #95a5a6;">○ Almeno 8 caratteri</div>
+                        <div id="req-uppercase" style="color: #95a5a6;">○ Almeno una maiuscola (A-Z)</div>
+                        <div id="req-lowercase" style="color: #95a5a6;">○ Almeno una minuscola (a-z)</div>
+                        <div id="req-number" style="color: #95a5a6;">○ Almeno un numero (0-9)</div>
+                        <div id="req-special" style="color: #95a5a6;">○ Almeno un carattere speciale (!@#$%^&*)</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirm_password">Conferma Nuova Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required>
+                </div>
+                
+                <button type="submit" class="btn-primary">🔄 Cambia Password</button>
+            </form>
+        </div>
+        
+        <!-- Eliminazione Account -->
+        <div class="account-section">
+            <h2>🗑️ Elimina Account</h2>
+            
+            {% if current_user.is_admin %}
+                <div class="info-box">
+                    <h4>ℹ️ Account Amministratore</h4>
+                    <p>Gli account amministratore non possono essere eliminati per motivi di sicurezza.</p>
+                </div>
+            {% else %}
+                <div class="warning-box">
+                    <h4>⚠️ Attenzione: Azione Irreversibile</h4>
+                    <p>L'eliminazione del tuo account è <strong>permanente</strong>. Tutti i tuoi dati verranno rimossi dal sistema.</p>
+                    <p>Questa azione <strong>non può essere annullata</strong>.</p>
+                </div>
+                
+                <button type="button" class="btn-danger" onclick="toggleDeleteConfirmation()">
+                    🗑️ Elimina il Mio Account
+                </button>
+                
+                <div id="deleteConfirmation" class="delete-confirmation">
+                    <h4>Conferma Eliminazione</h4>
+                    <form method="POST" action="{{ url_for('delete_account') }}">
+                        <div class="checkbox-group">
+                            <label>
+                                <input type="checkbox" id="confirmCheck" required>
+                                <span>Confermo di voler eliminare permanentemente il mio account</span>
+                            </label>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password_confirm">Inserisci la tua password per confermare</label>
+                            <input type="password" id="password_confirm" name="password" required>
+                        </div>
+                        
+                        <button type="submit" class="btn-danger">
+                            ⚠️ Elimina Definitivamente
+                        </button>
+                        <button type="button" class="btn-primary" onclick="toggleDeleteConfirmation()" style="margin-left: 10px;">
+                            Annulla
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script>
+        function toggleDeleteConfirmation() {
+            const confirmation = document.getElementById('deleteConfirmation');
+            confirmation.classList.toggle('active');
+        }
+        
+        const newPasswordInput = document.getElementById('new_password');
+        const reqLength = document.getElementById('req-length');
+        const reqUppercase = document.getElementById('req-uppercase');
+        const reqLowercase = document.getElementById('req-lowercase');
+        const reqNumber = document.getElementById('req-number');
+        const reqSpecial = document.getElementById('req-special');
+        
+        newPasswordInput.addEventListener('input', function() {
+            const password = this.value;
+            
+            // Controlla ogni requisito
+            updateReq(reqLength, password.length >= 8);
+            updateReq(reqUppercase, /[A-Z]/.test(password));
+            updateReq(reqLowercase, /[a-z]/.test(password));
+            updateReq(reqNumber, /[0-9]/.test(password));
+            updateReq(reqSpecial, /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password));
+        });
+        
+        function updateReq(element, isValid) {
+            if (isValid) {
+                element.style.color = '#27ae60';
+                element.textContent = '✓' + element.textContent.substring(1);
+            } else {
+                element.style.color = '#95a5a6';
+                element.textContent = '○' + element.textContent.substring(1);
+            }
+        }
+    </script>
+</body>
+</html>

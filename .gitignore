@@ -1,0 +1,25 @@
+# Cartelle di Python da ignorare
+__pycache__/
+*.py[cod]
+
+# Ambiente virtuale
+venv/
+.env/
+env/
+
+# File di configurazione sensibili
+*.env
+instance/
+
+# Cache di editor
+.vscode/
+.idea/
+
+# File di sistema
+.DS_Store
+Thumbs.db
+
+# File temporanei
+*.log
+*.sqlite3
+*.db

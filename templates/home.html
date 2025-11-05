@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-SHOP - Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body class="ecommerce-page">
+    <!-- NAVBAR -->
+    <header class="nav">
+        <a href="{{ url_for('home') }}" class="brand">E-SHOP</a>
+        
+        <div class="search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Cerca prodotti..." id="searchBar" oninput="filterProducts()">
+        </div>
+        
+        <div class="actions">
+            <!-- Link Contatti -->
+            <a href="{{ url_for('contatti') }}" class="icon-btn" title="Contatti">
+                <i class="fa-solid fa-envelope"></i>
+                <span>Contatti</span>
+            </a>
+            
+            <!-- Link Account -->
+            <a href="{{ url_for('account') }}" class="icon-btn" title="Account">
+                <i class="fa-solid fa-user-gear"></i>
+                <span>Account</span>
+            </a>
+            
+            <!-- Link Dashboard (solo se admin) -->
+            {% if current_user.is_admin %}
+            <a href="{{ url_for('logs') }}" class="icon-btn" title="Dashboard">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Dashboard</span>
+            </a>
+            {% endif %}
+            
+            <!-- Carrello (decorativo) -->
+            <button class="icon-btn" title="Carrello" onclick="alert('Carrello non disponibile!')">
+                <i class="fa-solid fa-cart-shopping"></i>
+            </button>
+            
+            <!-- Logout -->
+            <a href="{{ url_for('logout') }}" class="icon-btn" title="Logout">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div style="max-width: 1200px; margin: 20px auto; padding: 0 36px;">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <main>
+        <!-- PRODOTTI -->
+        <section class="products">
+            <h2>Prodotti in Evidenza</h2>
+            <div class="grid" id="productGrid">
+
+                <div class="product-card" data-name="Maglietta Basic">
+                    <div class="product-img">
+                        <img src="https://www.77onlineshop.de/$WS/77onlineshop/websale8_shop-77onlineshop/produkte/medien/bilder/normal/19125413.jpg" alt="Maglietta Basic">
+                    </div>
+                    <p>Maglietta Basic</p>
+                    <p><strong>€19.99</strong></p>
+                    <button class="add-to-cart-btn" onclick="addToCart('Maglietta Basic')" title="Aggiungi al carrello">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </button>
+                </div>
+
+                <div class="product-card" data-name="Baggy Jeans">
+                    <div class="product-img">
+                        <img src="https://image.hm.com/assets/hm/1a/db/1adb0736e63e945b2ae73f606c6717142d39b663.jpg?imwidth=2160" alt="Baggy Jeans">
+                    </div>
+                    <p>Baggy Jeans</p>
+                    <p><strong>€49.99</strong></p>
+                    <button class="add-to-cart-btn" onclick="addToCart('Baggy Jeans')" title="Aggiungi al carrello">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </button>
+                </div>
+
+                <div class="product-card" data-name="Tacchi">
+                    <div class="product-img">
+                        <img src="https://www.boutiquedeisogni.com/cdn/shop/products/1664521274f35dfe23483e71e4590f03825e0e44c0.jpg?v=1702848287" alt="Tacchi">
+                    </div>
+                    <p>Tacchi</p>
+                    <p><strong>€69.99</strong></p>
+                    <button class="add-to-cart-btn" onclick="addToCart('Tacchi')" title="Aggiungi al carrello">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </button>
+                </div>
+
+                <div class="product-card" data-name="Giacca Invernale">
+                    <div class="product-img">
+                        <img src="https://it.venum.com/cdn/shop/files/b8be6fa19511529649d0fe86694f0e1cd254cacd_VENUM_05518_005_G_1.jpg?v=1750165365" alt="Giacca Invernale">
+                    </div>
+                    <p>Giacca Invernale</p>
+                    <p><strong>€89.99</strong></p>
+                    <button class="add-to-cart-btn" onclick="addToCart('Giacca Invernale')" title="Aggiungi al carrello">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </button>
+                </div>
+
+                <div class="product-card" data-name="Cuffie Wireless">
+                    <div class="product-img">
+                        <img src="https://media-assets.wired.it/photos/68905ea66c13171192005671/2:3/w_800,h_1200,c_limit/cuffie%20wireless.jpg" alt="Cuffie Wireless">
+                    </div>
+                    <p>Cuffie Wireless</p>
+                    <p><strong>€59.99</strong></p>
+                    <button class="add-to-cart-btn" onclick="addToCart('Cuffie Wireless')" title="Aggiungi al carrello">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </button>
+                </div>
+
+                <div class="product-card" data-name="iPhone">
+                    <div class="product-img">
+                        <img src="https://media.ldlc.com/r1600/ld/products/00/06/27/51/LD0006275104.jpg" alt="iPhone">
+                    </div>
+                    <p>iPhone</p>
+                    <p><strong>€499.99</strong></p>
+                    <button class="add-to-cart-btn" onclick="addToCart('iPhone')" title="Aggiungi al carrello">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </button>
+                </div>
+
+                <div class="product-card" data-name="Zaino Casual">
+                    <div class="product-img">
+                        <img src="https://stimm.com/cdn/shop/files/the-north-face-zaino-borealis-classic-tnf-black-asphalt-grey1_c0c9e9aa-85ad-4b27-8708-28ab8d673e30.jpg?v=1738859877" alt="Zaino Casual">
+                    </div>
+                    <p>Zaino Casual</p>
+                    <p><strong>€39.99</strong></p>
+                    <button class="add-to-cart-btn" onclick="addToCart('Zaino Casual')" title="Aggiungi al carrello">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </button>
+                </div>
+
+                <div class="product-card" data-name="Orologio Digitale">
+                    <div class="product-img">
+                        <img src="https://www.joygioielli.com/cdn/shop/products/A158WEA-1EF-1_d8c6b4fd-83ad-4e95-a78e-ff4de55da26b.jpg?v=1742293824" alt="Orologio Digitale">
+                    </div>
+                    <p>Orologio Digitale</p>
+                    <p><strong>€129.99</strong></p>
+                    <button class="add-to-cart-btn" onclick="addToCart('Orologio Digitale')" title="Aggiungi al carrello">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- CONTATTI -->
+        <section id="contacts" class="contacts-section">
+            <h2>Contatti</h2>
+            <p>
+                <strong>Email:</strong> support@e-shop.it<br>
+                <strong>Telefono:</strong> +39 123 333 1111<br>
+                <strong>Indirizzo:</strong> Via Bigari 3, Bologna
+            </p>
+        </section>
+    </main>
+
+    <script>
+        // Filtra prodotti in base alla ricerca
+        function filterProducts() {
+            const input = document.getElementById('searchBar').value.toLowerCase();
+            document.querySelectorAll('.product-card').forEach(card => {
+                const name = card.getAttribute('data-name').toLowerCase();
+                card.style.display = name.includes(input) ? 'block' : 'none';
+            });
+        }
+
+        // Aggiungi al carrello (decorativo)
+        function addToCart(productName) {
+            alert(productName + ' aggiunto al carrello!');
+        }
+    </script>
+</body>
+</html>
