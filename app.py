@@ -461,6 +461,15 @@ def contatti():
 @app.errorhandler(404)
 def page_not_found(e):
     """Gestisce errori 404 - Pagina non trovata"""
+    # Non loggare richieste a file statici comuni (favicon, robots.txt, ecc.)
+    ignore_paths = ['/favicon.ico', '/robots.txt', '/apple-touch-icon', '/sitemap.xml']
+    
+    # Ignora anche richieste a file statici generici
+    if any(request.path.startswith(path) for path in ignore_paths) or \
+       request.path.endswith(('.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.css', '.js', '.map')):
+        return render_template('404.html'), 404
+    
+    # Logga solo 404 su pagine HTML reali
     create_log(
         ip=request.remote_addr,
         log_type="PAGE_NOT_FOUND",
