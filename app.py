@@ -134,7 +134,8 @@ def register():
 
         password_validation = PasswordValidator.validate_strength(password, username)
         if not password_validation['is_strong']:
-            flash('La password non soddisfa i requisiti di sicurezza.', 'error')
+            for error in password_validation['errors']:
+                flash(error, 'error')
             return render_template('register.html')
 
         new_user = create_user(username, password)
@@ -319,7 +320,8 @@ def change_password():
 
     password_validation = PasswordValidator.validate_strength(new_password, current_user.username)
     if not password_validation['is_strong']:
-        flash('La nuova password non soddisfa i requisiti di sicurezza.', 'error')
+        for error in password_validation['errors']:
+            flash(error, 'error')
         return redirect(url_for('account'))
 
     try:
