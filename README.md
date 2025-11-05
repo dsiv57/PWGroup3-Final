@@ -13,8 +13,8 @@ Flask-Bcrypt==1.0.1
 
 ### 1. Clona il repository
 ```bash
-git clone https://github.com/dsiv57/PWGroup3
-cd PWGroup3
+git clone https://github.com/dsiv57/PWGroup3-Final
+cd PWGroup3-Final
 ```
 
 ### 2. Crea e attiva l'ambiente virtuale
